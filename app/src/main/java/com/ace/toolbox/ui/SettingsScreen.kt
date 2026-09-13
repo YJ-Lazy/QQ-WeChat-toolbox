@@ -183,7 +183,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         MiuiSection("关于") {
             MiuiRow(
                 Icons.Rounded.Extension,
-                "ACE 工具箱 2.0",
+                "ACE 工具箱 2.1",
                 "Modern LSPosed API 102 · minSdk 26"
             )
             MiuiRow(

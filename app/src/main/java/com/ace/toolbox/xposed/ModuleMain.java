@@ -20,7 +20,7 @@ public final class ModuleMain extends XposedModule {
     @Override
     public void onModuleLoaded(@NonNull ModuleLoadedParam param) {
         log(Log.INFO, TAG,
-                "ACE 2.0 loaded; process=" + param.getProcessName()
+                "ACE 2.1 loaded; process=" + param.getProcessName()
                         + "; api=" + getApiVersion()
                         + "; framework=" + getFrameworkName() + " " + getFrameworkVersion());
     }

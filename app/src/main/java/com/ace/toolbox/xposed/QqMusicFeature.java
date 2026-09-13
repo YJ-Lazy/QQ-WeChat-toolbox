@@ -77,7 +77,8 @@ final class QqMusicFeature {
             int mode = mode(source.account, group);
             if (!QqMusicState.allowed(mode, own)) return;
             String text = event.text.trim();
-            if (!text.startsWith("点歌") && !text.matches("[0-9]{1,2}")) return;
+            if (!text.startsWith("点歌") && !text.startsWith("QQ点歌")
+                    && !text.matches("[0-9]{1,2}") && !"取消点歌".equals(text)) return;
             long seconds = event.time > 100000000000L ? event.time / 1000 : event.time;
             if (seconds <= 0 || Math.abs(System.currentTimeMillis() / 1000 - seconds) > 90) return;
             long rev = revision(source.account, group).get();
@@ -124,6 +125,27 @@ final class QqMusicFeature {
                 source.send(group, result.toString(), false);
                 if (current(source, group, own, rev)) {
                     state.remember(sessionKey, songs, System.currentTimeMillis(), rev);
+                }
+            } else if (text.startsWith("QQ点歌")) {
+                String query = text.substring(4).trim();
+                if (query.isEmpty() || query.length() > 80) {
+                    source.send(group, "用法：QQ点歌 歌名（最多 80 字）", false); return;
+                }
+                if (!state.searchAllowed(sessionKey, now)) return;
+                state.remove(sessionKey);
+                List<QqMusicSearch.Song> songs = QqMusicSearch.search(query);
+                if (!current(source, group, own, rev)) return;
+                if (songs.isEmpty()) { source.send(group, "QQ音乐：没有找到相关歌曲，请换个关键词。", false); return; }
+                StringBuilder result = new StringBuilder("QQ音乐 · ").append(QqMusicSearch.clean(query));
+                for (int i = 0; i < songs.size(); i++) result.append('\n').append(i + 1).append(". ")
+                        .append(songs.get(i).title).append(" — ").append(songs.get(i).singer);
+                result.append("\n请点歌者在 3 分钟内发送序号；序号对应你最近一次点歌。");
+                source.send(group, result.toString(), false);
+                if (current(source, group, own, rev)) state.remember(sessionKey, songs, now, rev);
+            } else if ("取消点歌".equals(text)) {
+                if (state.get(sessionKey) != null) {
+                    state.remove(sessionKey);
+                    source.send(group, "已取消本次点歌。", false);
                 }
             } else {
                 QqMusicState.Pending<QqMusicSearch.Song> choice = state.get(sessionKey);

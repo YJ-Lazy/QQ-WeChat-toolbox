@@ -335,7 +335,7 @@ private static void confirmRunJavaScript(Activity activity) {
             .setTitle("运行 Java 脚本？")
             .setMessage(
                     "脚本将在 QQ 进程中执行，拥有该进程可访问的权限。"
-                            + "\n\nv0.2.7 支持消息与群事件回调；回调在独立脚本线程执行，不阻塞 QQ Hook 线程。"
+                            + "\n\nv2.1 支持 QQNT 群聊点歌、SILK 语音发送与消息回调；回调在独立脚本线程执行，不阻塞 QQ Hook 线程。"
                             + "\n\n请只运行你自己编写或已审计的代码。"
             )
             .setNegativeButton("取消", null)
@@ -898,109 +898,3 @@ private static void showCleanResult(
         parent.addView(v, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 dp(activity, heightDp)
-        ));
-    }
-
-
-private static Dialog createAceDialog(
-        Activity activity,
-        View content,
-        boolean tall
-) {
-    Dialog dialog = new Dialog(activity);
-    dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-    dialog.setContentView(content);
-
-    Window window = dialog.getWindow();
-    if (window != null) {
-        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        window.setDimAmount(.42f);
-        window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-
-        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.copyFrom(window.getAttributes());
-        lp.width = Math.min(
-                activity.getResources().getDisplayMetrics().widthPixels - dp(activity, 28),
-                dp(activity, 520)
-        );
-        lp.height = tall
-                ? Math.min(
-                        activity.getResources().getDisplayMetrics().heightPixels - dp(activity, 70),
-                        dp(activity, 760)
-                )
-                : WindowManager.LayoutParams.WRAP_CONTENT;
-        window.setAttributes(lp);
-    }
-    return dialog;
-}
-
-private static LinearLayout dialogSurface(Activity activity) {
-    LinearLayout root = new LinearLayout(activity);
-    root.setOrientation(LinearLayout.VERTICAL);
-    root.setBackground(roundRect(Color.WHITE, dp(activity, 26)));
-    return root;
-}
-
-private static TextView circleIcon(Activity activity, String glyph, int background) {
-    TextView icon = text(activity, glyph, 18, Color.WHITE, true);
-    icon.setGravity(Gravity.CENTER);
-    icon.setBackground(roundRect(background, dp(activity, 22)));
-    return icon;
-}
-
-private static View divider(Activity activity) {
-    View divider = new View(activity);
-    divider.setBackgroundColor(DIVIDER);
-    divider.setLayoutParams(new LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(activity, 1)));
-    return divider;
-}
-
-private static LinearLayout statRow(
-        Activity activity,
-        String label,
-        String value,
-        int valueColor
-) {
-    LinearLayout row = new LinearLayout(activity);
-    row.setOrientation(LinearLayout.HORIZONTAL);
-    row.setGravity(Gravity.CENTER_VERTICAL);
-    row.setPadding(0, dp(activity, 8), 0, dp(activity, 8));
-
-    TextView left = text(activity, label, 13, TEXT_SECONDARY, false);
-    TextView right = text(activity, value, 14, valueColor, true);
-    right.setGravity(Gravity.END);
-
-    row.addView(left, new LinearLayout.LayoutParams(
-            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-    row.addView(right);
-    return row;
-}
-
-    static String formatBytes(long bytes) {
-        if (bytes < 1024) return bytes + " B";
-
-        double v = bytes;
-        String[] units = {"KB", "MB", "GB", "TB"};
-        int i = -1;
-        do {
-            v /= 1024.0;
-            i++;
-        } while (v >= 1024 && i < units.length - 1);
-
-        return String.format(
-                Locale.getDefault(),
-                "%.1f %s",
-                v,
-                units[i]
-        );
-    }
-
-    private static int dp(Activity activity, int value) {
-        return (int) (
-                value * activity.getResources().getDisplayMetrics().density + .5f
-        );
-    }
-
-    private HostCleanerDialog() {}
-}
