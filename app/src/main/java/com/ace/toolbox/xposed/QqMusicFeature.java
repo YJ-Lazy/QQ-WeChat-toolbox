@@ -140,7 +140,7 @@ final class QqMusicFeature {
                     // Keep cache for QQ's asynchronous upload/retry; prune after 24 hours.
                     source.sendVoice(group,voice);
                 } else {
-                    if(current(source,group,own,rev)) source.send(group,song.card(source.account),true);
+                    if(current(source,group,own,rev)) source.sendOfficialCard(group,song.card(source.account));
                 }
             }
         } catch (Throwable error) {

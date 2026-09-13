@@ -67,6 +67,27 @@ final class QqMusicBridge {
         }
         sendElement(group, elem);
     }
+    boolean sendOfficialCard(String group, String xml) throws Exception {
+        if (!account.equals(String.valueOf(call(runtime, "getCurrentAccountUin"))))
+            throw new IllegalStateException("账号已切换，已取消发送");
+        Class<?> messageType = type("com.tencent.mobileqq.data.ArkAppMessage");
+        Object message = messageType.getConstructor().newInstance();
+        boolean parsed = (Boolean) messageType.getMethod("fromAppXml", String.class).invoke(message, xml);
+        if (!parsed) throw new IllegalStateException("QQ 无法解析分享卡片");
+        Class<?> sessionType = type("com.tencent.mobileqq.activity.aio.SessionInfo");
+        Object session = sessionType.getConstructor().newInstance();
+        Class<?> baseSession = type("com.tencent.mobileqq.activity.aio.n");
+        Field type = baseSession.getDeclaredField("d"); type.setAccessible(true); type.setInt(session, 2);
+        Field uin = baseSession.getDeclaredField("e"); uin.setAccessible(true); uin.set(session, group);
+        Class<?> facade = type("com.tencent.mobileqq.activity.ChatActivityFacade");
+        Method send = facade.getDeclaredMethod("v", type("com.tencent.mobileqq.app.QQAppInterface"),
+                sessionType, messageType, int.class);
+        send.setAccessible(true);
+        Object result = send.invoke(null, runtime, session, message, 0);
+        if (!(result instanceof Boolean) || !((Boolean) result))
+            throw new IllegalStateException("QQ 原生分享接口拒绝发送");
+        return true;
+    }
     void sendVoice(String group, QqMusicAudio.Voice voice) throws Exception {
         Class<?> api = type("com.tencent.qqnt.msg.api.IMsgUtilApi");
         Object utility = type("com.tencent.mobileqq.qroute.QRoute").getMethod("api", Class.class).invoke(null, api);
