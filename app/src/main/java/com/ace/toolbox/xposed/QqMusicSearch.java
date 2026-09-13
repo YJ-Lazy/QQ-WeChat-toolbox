@@ -12,16 +12,17 @@ final class QqMusicSearch {
         Song(String mid, String title, String singer, String album) {
             this.mid = mid; this.title = title; this.singer = singer; this.album = album;
         }
-        String card() throws JSONException {
+        String card(String audioUrl) throws JSONException {
             String url = "https://y.qq.com/n/ryqq/songDetail/" + mid;
             JSONObject music = new JSONObject().put("title", title).put("desc", singer)
                     .put("tag", "QQ音乐").put("jumpUrl", url)
                     .put("preview", album.isEmpty() ? "" : "https://y.gtimg.cn/music/photo_new/T002R300x300M000" + album + ".jpg")
                     .put("sourceMsgId", "0").put("source_icon", "").put("source_url", "");
-            // Share the official song page. Do not fabricate a playable URL or fetch paid audio.
-            return new JSONObject().put("app", "com.tencent.structmsg").put("view", "music")
+            if (!audioUrl.isEmpty()) music.put("musicUrl",audioUrl);
+            // Without audio, use a link card instead of presenting a broken play button.
+            return new JSONObject().put("app", "com.tencent.structmsg").put("view", audioUrl.isEmpty() ? "news" : "music")
                     .put("ver", "0.0.0.1").put("prompt", "[分享]" + title)
-                    .put("meta", new JSONObject().put("music", music))
+                    .put("meta", new JSONObject().put(audioUrl.isEmpty() ? "news" : "music", music))
                     .put("config", new JSONObject().put("forward", true).put("type", "normal"))
                     .put("desc", "音乐").toString();
         }

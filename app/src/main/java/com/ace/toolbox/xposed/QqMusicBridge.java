@@ -51,10 +51,6 @@ final class QqMusicBridge {
     }
 
     void send(String group, String body, boolean ark) throws Exception {
-        if (!account.equals(String.valueOf(call(runtime, "getCurrentAccountUin"))))
-            throw new IllegalStateException("账号已切换，已取消发送");
-        Class<?> contactType = type("com.tencent.qqnt.kernelpublic.nativeinterface.Contact");
-        Object contact = contactType.getConstructor(int.class, String.class, String.class).newInstance(2, group, "");
         Class<?> elemType = type(N + "MsgElement");
         Object elem = elemType.getConstructor().newInstance();
         elemType.getMethod("setElementType", int.class).invoke(elem, ark ? 10 : 1);
@@ -69,6 +65,20 @@ final class QqMusicBridge {
             t.getMethod("setContent", String.class).invoke(value, body);
             elemType.getMethod("setTextElement", t).invoke(elem, value);
         }
+        sendElement(group, elem);
+    }
+    void sendVoice(String group, QqMusicAudio.Voice voice) throws Exception {
+        Class<?> api = type("com.tencent.qqnt.msg.api.IMsgUtilApi");
+        Object utility = type("com.tencent.mobileqq.qroute.QRoute").getMethod("api", Class.class).invoke(null, api);
+        Object element = api.getMethod("createPttElement", String.class, int.class)
+                .invoke(utility, voice.file.getAbsolutePath(), voice.durationMs);
+        sendElement(group, element);
+    }
+    private void sendElement(String group, Object elem) throws Exception {
+        if (!account.equals(String.valueOf(call(runtime, "getCurrentAccountUin"))))
+            throw new IllegalStateException("账号已切换，已取消发送");
+        Class<?> contactType = type("com.tencent.qqnt.kernelpublic.nativeinterface.Contact");
+        Object contact = contactType.getConstructor(int.class, String.class, String.class).newInstance(2, group, "");
         long id = ((Number) service.getClass().getMethod("generateMsgUniqueId", int.class).invoke(service, 2)).longValue();
         ArrayList<Object> elements = new ArrayList<>(); elements.add(elem);
         CountDownLatch done = new CountDownLatch(1);

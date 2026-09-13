@@ -47,6 +47,12 @@ final class QqMusicFeature {
             throw new IllegalStateException("开关保存失败");
         revision(account, group).incrementAndGet();
     }
+    int delivery(String account, String group) { return prefs().getInt("delivery:"+key(account,group),0); }
+    void delivery(String account, String group, int value) {
+        if(value<0 || value>1) throw new IllegalArgumentException("delivery");
+        if(!prefs().edit().putInt("delivery:"+key(account,group),value).commit()) throw new IllegalStateException("发送方式保存失败");
+        revision(account,group).incrementAndGet();
+    }
     private SharedPreferences prefs() { return app.getSharedPreferences("ace_group_music", Context.MODE_PRIVATE); }
     private static String key(String account, String group) { return account + ":" + group; }
     private AtomicLong revision(String account, String group) {
@@ -123,7 +129,23 @@ final class QqMusicFeature {
                 }
                 // Remove before sending: an uncertain/late acknowledgment must never cause an automatic duplicate.
                 state.remove(sessionKey);
-                if (current(source, group, own, rev)) source.send(group, choice.songs.get(index).card(), true);
+                if (!current(source, group, own, rev)) return;
+                QqMusicSearch.Song song = choice.songs.get(index);
+                if (delivery(source.account,group)==1) {
+                    notice("正在下载并转换SILK语音…");
+                    String url=QqMusicAudio.playable(song);
+                    if (!current(source,group,own,rev)) return;
+                    QqMusicAudio.Voice voice=QqMusicAudio.prepare(app,source,url);
+                    if (!current(source,group,own,rev)) { voice.file.delete(); return; }
+                    // Keep cache for QQ's asynchronous upload/retry; prune after 24 hours.
+                    source.sendVoice(group,voice);
+                } else {
+                    String url="";
+                    try {url=QqMusicAudio.playable(song);} catch(Exception unavailable) {
+                        notice("没有可播放音源，发送歌曲页面卡片");
+                    }
+                    if(current(source,group,own,rev)) source.send(group,song.card(url),true);
+                }
             }
         } catch (Throwable error) {
             Log.e("ACE-Music", "Music request failed", error);
