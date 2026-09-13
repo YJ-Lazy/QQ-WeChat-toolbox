@@ -10,8 +10,8 @@ final class QqMusicState<T> {
     private final LinkedHashMap<String, Long> searches = new LinkedHashMap<>();
     static boolean allowed(int mode, boolean own) { return mode == 2 || mode == 1 && own; }
     static String key(String account, String group, String sender) { return account + ":" + group + ":" + sender; }
-    boolean claim(String account, String group, long id) {
-        String k = key(account, group, Long.toString(id));
+    boolean claim(String account, String group, String id) {
+        String k = key(account, group, id);
         if (seen.containsKey(k)) return false;
         seen.put(k, true); trim(seen, 1024); return true;
     }

@@ -67,7 +67,7 @@ final class QqMusicFeature {
         }
         try {
             AceScriptMessageEvent event = AceScriptMessageEvent.from(outgoing ? "send" : "receive", records);
-            if (event.chatType != 2 || event.msgId == 0) return;
+            if (event.chatType != 2) return;
             String group = event.peerUid.matches("[1-9][0-9]+")
                     ? event.peerUid : event.peerUin;
             if (!group.matches("[1-9][0-9]+")) return;
@@ -81,7 +81,13 @@ final class QqMusicFeature {
             long seconds = event.time > 100000000000L ? event.time / 1000 : event.time;
             if (seconds <= 0 || Math.abs(System.currentTimeMillis() / 1000 - seconds) > 90) return;
             long rev = revision(source.account, group).get();
-            worker.execute(() -> handle(source, group, sender, own, event.msgId, text, rev));
+            // Some QQNT send callbacks expose msgId=0. Keep duplicate protection with
+            // a deterministic fallback key instead of dropping the command entirely.
+            String eventId = event.msgId != 0 ? Long.toString(event.msgId)
+                    : (event.direction + "|" + group + "|" + sender + "|" + seconds + "|" + text);
+            Log.i("ACE-Music", "accepted " + event.direction + " group=" + group
+                    + " sender=" + sender + " text=" + text + " msgId=" + event.msgId);
+            worker.execute(() -> handle(source, group, sender, own, eventId, text, rev));
         } catch (RejectedExecutionException busy) {
             notice("点歌任务较多，请稍后重试");
         } catch (Throwable error) { Log.e("ACE-Music", "Message parsing failed", error); }
@@ -93,13 +99,14 @@ final class QqMusicFeature {
                 && revision(source.account, group).get() == rev;
     }
 
-    private void handle(QqMusicBridge source, String group, String sender, boolean own, long msgId, String text, long rev) {
+    private void handle(QqMusicBridge source, String group, String sender, boolean own, String eventId, String text, long rev) {
         if (!current(source, group, own, rev)) return;
         String sessionKey = QqMusicState.key(source.account, group, sender);
-        if (!state.claim(source.account, group, msgId)) return;
+        if (!state.claim(source.account, group, eventId)) return;
         long now = System.currentTimeMillis();
         try {
             if (text.startsWith("点歌")) {
+                Log.i("ACE-Music", "search start group=" + group + " query=" + text.substring(2).trim());
                 String query = text.substring(2).trim();
                 if (query.isEmpty() || query.length() > 80) {
                     source.send(group, "用法：点歌 歌名（最多 80 字）", false); return;
@@ -107,6 +114,7 @@ final class QqMusicFeature {
                 if (!state.searchAllowed(sessionKey, now)) return;
                 state.remove(sessionKey);
                 List<QqMusicSearch.Song> songs = QqMusicSearch.search(query);
+                Log.i("ACE-Music", "search result count=" + songs.size() + " group=" + group);
                 if (!current(source, group, own, rev)) return;
                 if (songs.isEmpty()) { source.send(group, "QQ音乐：没有找到相关歌曲，请换个关键词。", false); return; }
                 StringBuilder result = new StringBuilder("QQ音乐 · ").append(QqMusicSearch.clean(query));
@@ -119,7 +127,10 @@ final class QqMusicFeature {
                 }
             } else {
                 QqMusicState.Pending<QqMusicSearch.Song> choice = state.get(sessionKey);
-                if (choice == null) return; // Ordinary group numbers are not commands without an active search.
+                if (choice == null) {
+                    Log.i("ACE-Music", "selection ignored: no pending search group=" + group + " sender=" + sender);
+                    return; // Ordinary group numbers are not commands without an active search.
+                }
                 if (!choice.valid(now, rev)) {
                     state.remove(sessionKey); source.send(group, "点歌结果已过期，请重新发送点歌指令。", false); return;
                 }
@@ -131,6 +142,8 @@ final class QqMusicFeature {
                 state.remove(sessionKey);
                 if (!current(source, group, own, rev)) return;
                 QqMusicSearch.Song song = choice.songs.get(index);
+                Log.i("ACE-Music", "selection=" + (index + 1) + " title=" + song.title
+                        + " delivery=" + delivery(source.account, group));
                 if (delivery(source.account,group)==1) {
                     notice("正在下载并转换SILK语音…");
                     String url=QqMusicAudio.playable(song);
@@ -140,7 +153,19 @@ final class QqMusicFeature {
                     // Keep cache for QQ's asynchronous upload/retry; prune after 24 hours.
                     source.sendVoice(group,voice);
                 } else {
-                    if(current(source,group,own,rev)) source.sendOfficialCard(group,song.card(source.account));
+                    if (current(source, group, own, rev)) {
+                        try {
+                            source.sendOfficialCard(group, song.card(source.account));
+                            Log.i("ACE-Music", "native card accepted title=" + song.title);
+                        } catch (Throwable cardError) {
+                            // A QQ Music SDK token is server-issued and cannot be safely
+                            // fabricated. Keep the command observable and actionable.
+                            Log.e("ACE-Music", "native card failed; falling back to text", cardError);
+                            source.send(group, "分享卡片发送失败（QQ音乐 token 无效），歌曲："
+                                    + song.title + " — " + song.singer + "\n" + song.url, false);
+                            notice("卡片不可用，已发送歌曲链接；可在菜单切换为 SILK 语音");
+                        }
+                    }
                 }
             }
         } catch (Throwable error) {
