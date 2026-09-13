@@ -140,11 +140,7 @@ final class QqMusicFeature {
                     // Keep cache for QQ's asynchronous upload/retry; prune after 24 hours.
                     source.sendVoice(group,voice);
                 } else {
-                    String url="";
-                    try {url=QqMusicAudio.playable(song);} catch(Exception unavailable) {
-                        notice("没有可播放音源，发送歌曲页面卡片");
-                    }
-                    if(current(source,group,own,rev)) source.send(group,song.card(url),true);
+                    if(current(source,group,own,rev)) source.send(group,song.card(source.account),true);
                 }
             }
         } catch (Throwable error) {

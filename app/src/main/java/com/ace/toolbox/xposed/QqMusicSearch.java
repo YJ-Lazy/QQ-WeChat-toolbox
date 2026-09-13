@@ -12,20 +12,28 @@ final class QqMusicSearch {
         Song(String mid, String title, String singer, String album) {
             this.mid = mid; this.title = title; this.singer = singer; this.album = album;
         }
-        String card(String audioUrl) throws JSONException {
-            String url = "https://y.qq.com/n/ryqq/songDetail/" + mid;
-            JSONObject music = new JSONObject().put("title", title).put("desc", singer)
-                    .put("tag", "QQ音乐").put("jumpUrl", url)
+        String card(String account) throws JSONException {
+            if (!account.matches("[1-9][0-9]{4,}")) throw new JSONException("QQ账号无效");
+            long uin = Long.parseLong(account);
+            long now = System.currentTimeMillis() / 1000;
+            String url = "https://i.y.qq.com/v8/playsong.html?platform=11&appshare=android_qq"
+                    + "&songmid=" + mid + "&type=0&appsongtype=1&_wv=1&source=qq&ADTAG=qfshare";
+            JSONObject news = new JSONObject().put("app_type", 1).put("appid", 100497308)
+                    .put("ctime", now).put("uin", uin)
+                    .put("title", title).put("desc", singer).put("jumpUrl", url)
                     .put("preview", album.isEmpty() ? "" : "https://y.gtimg.cn/music/photo_new/T002R300x300M000" + album + ".jpg")
-                    .put("sourceMsgId", "0").put("source_icon", "").put("source_url", "");
-            if (!audioUrl.isEmpty()) music.put("musicUrl",audioUrl);
-            // Without audio, use a link card instead of presenting a broken play button.
-            return new JSONObject().put("app", "com.tencent.structmsg").put("view", audioUrl.isEmpty() ? "news" : "music")
-                    .put("ver", "0.0.0.1").put("prompt", "[分享]" + title)
-                    .put("meta", new JSONObject().put(audioUrl.isEmpty() ? "news" : "music", music))
-                    .put("config", new JSONObject().put("forward", true).put("type", "normal"))
-                    .put("desc", "音乐").toString();
+                    .put("tag", "QQ音乐")
+                    .put("tagIcon", "https://p.qpic.cn/qqconnect/0/app_100497308_1626060999/100");
+            // Match the observed QQ Music SDK-share news template. Server-issued token and
+            // msg_seq must not be copied from another message or invented here.
+            return new JSONObject().put("app", "com.tencent.tuwen.lua").put("bizsrc", "qqconnect.sdkshare")
+                    .put("view", "news").put("ver", "0.0.0.1").put("prompt", "[分享]" + title)
+                    .put("meta", new JSONObject().put("news", news))
+                    .put("extra", new JSONObject().put("app_type", 1).put("appid", 100497308).put("uin", uin))
+                    .put("config", new JSONObject().put("ctime", now).put("forward", 1).put("type", "normal"))
+                    .toString();
         }
+
     }
 
     static List<Song> search(String query) throws Exception {
