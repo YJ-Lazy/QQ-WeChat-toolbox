@@ -33,6 +33,7 @@ final class HostHookInstaller {
 
         if (HostPackages.QQ.equals(pkg)) {
             QqGroupMenuHook.install(module, loader);
+            QqShareDiagnostics.install(module, loader);
             QqCompatibilityProbe.run(module, loader);
             QqSettingsProviderInjector.install(module, loader);
             QqScriptEventHookInstaller.install(module, loader);

@@ -23,7 +23,8 @@ final class QqGroupMenuDialog {
     private static final List<Item> ITEMS = Arrays.asList(
             new Item("Java", QqGroupMenuDialog::javaDialog),
             new Item("点歌开关 / 触发范围", QqGroupMenuDialog::musicDialog),
-            new Item("音乐发送方式", QqGroupMenuDialog::deliveryDialog)
+            new Item("音乐发送方式", QqGroupMenuDialog::deliveryDialog),
+            new Item("临时分享诊断", QqShareDiagnostics::menu)
     );
     static void show(Activity a, String group) {
         if (!usable(a)) return;
