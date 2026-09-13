@@ -184,7 +184,7 @@ final class QqMusicFeature {
                             // fabricated. Keep the command observable and actionable.
                             Log.e("ACE-Music", "native card failed; falling back to text", cardError);
                             source.send(group, "分享卡片发送失败（QQ音乐 token 无效），歌曲："
-                                    + song.title + " — " + song.singer + "\n" + song.url, false);
+                                    + song.title + " — " + song.singer + "\n" + song.link(), false);
                             notice("卡片不可用，已发送歌曲链接；可在菜单切换为 SILK 语音");
                         }
                     }

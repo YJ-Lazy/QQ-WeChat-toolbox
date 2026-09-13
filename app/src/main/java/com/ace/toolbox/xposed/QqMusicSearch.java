@@ -12,12 +12,15 @@ final class QqMusicSearch {
         Song(String mid, String title, String singer, String album) {
             this.mid = mid; this.title = title; this.singer = singer; this.album = album;
         }
+        String link() {
+            return "https://i.y.qq.com/v8/playsong.html?platform=11&appshare=android_qq&songmid="
+                    + mid + "&type=0&appsongtype=1&_wv=1&source=qq&ADTAG=qfshare";
+        }
         String card(String account) throws JSONException {
             if (!account.matches("[1-9][0-9]{4,}")) throw new JSONException("QQ账号无效");
             long uin = Long.parseLong(account);
             long now = System.currentTimeMillis() / 1000;
-            String url = "https://i.y.qq.com/v8/playsong.html?platform=11&appshare=android_qq"
-                    + "&songmid=" + mid + "&type=0&appsongtype=1&_wv=1&source=qq&ADTAG=qfshare";
+            String url = link();
             JSONObject news = new JSONObject().put("app_type", 1).put("appid", 100497308)
                     .put("ctime", now).put("uin", uin)
                     .put("title", title).put("desc", singer).put("jumpUrl", url)
