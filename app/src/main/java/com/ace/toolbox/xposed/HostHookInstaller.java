@@ -32,6 +32,7 @@ final class HostHookInstaller {
         HostSettingInjector.setLogger(module);
 
         if (HostPackages.QQ.equals(pkg)) {
+            QqGroupMenuHook.install(module, loader);
             QqCompatibilityProbe.run(module, loader);
             QqSettingsProviderInjector.install(module, loader);
             QqScriptEventHookInstaller.install(module, loader);
@@ -169,6 +170,7 @@ final class HostHookInstaller {
                                         "WeChat Activity resumed: " + activity.getClass().getName());
                             }
                             if (HostPackages.QQ.equals(pkg)) {
+                                QqMusicFeature.INSTANCE.resume(activity);
                                 HostJavaScriptEngine.attachActivity(activity);
                                 HostJavaScriptEngine.maybeAutoRun(activity);
                             }

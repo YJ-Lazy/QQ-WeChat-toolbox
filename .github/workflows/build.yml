@@ -67,7 +67,7 @@ jobs:
           path: ACE-QQ-WeChat-Toolbox-v2.0.apk
 
       - name: Publish or refresh GitHub Release v2.0
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
