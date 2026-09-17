@@ -335,7 +335,7 @@ private static void confirmRunJavaScript(Activity activity) {
             .setTitle("运行 Java 脚本？")
             .setMessage(
                     "脚本将在 QQ 进程中执行，拥有该进程可访问的权限。"
-                            + "\n\nv2.1 支持 QQNT 群聊点歌、SILK 语音发送与消息回调；回调在独立脚本线程执行，不阻塞 QQ Hook 线程。"
+                            + "\n\nv2.1 支持 Java 脚本与 QQNT 消息回调；回调在独立脚本线程执行，不阻塞 QQ Hook 线程。"
                             + "\n\n请只运行你自己编写或已审计的代码。"
             )
             .setNegativeButton("取消", null)

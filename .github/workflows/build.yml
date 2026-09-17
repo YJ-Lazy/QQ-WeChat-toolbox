@@ -79,7 +79,7 @@ jobs:
           git tag -f v2.1 "$GITHUB_SHA"
           git push origin refs/tags/v2.1 --force
 
-          NOTES="QQ/WeChat Toolbox 2.1 正式版本。加入 QQNT 群聊点歌增强、取消点歌、SILK 语音发送与诊断能力。此 APK 为 GitHub Actions 使用项目正式签名构建，并经过 apksigner 验证。"
+          NOTES="QQ/WeChat Toolbox 2.1 正式版本。移除内置点歌及临时音乐诊断，保留群聊 Java 入口与脚本消息回调。此 APK 为 GitHub Actions 使用项目正式签名构建，并经过 apksigner 验证。"
 
           if gh release view v2.1 >/dev/null 2>&1; then
             gh release edit v2.1 --title "QQ/WeChat Toolbox v2.1" --notes "$NOTES"

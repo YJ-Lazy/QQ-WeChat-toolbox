@@ -79,10 +79,13 @@ final class QqGroupMenuHook {
     private static String group(Binding b) throws Exception {
         Object owner = b.owner.get(); if (owner == null) return null;
         Object context = b.context.invoke(owner); if (context == null) return null;
-        Object contact = QqMusicBridge.call(QqMusicBridge.call(QqMusicBridge.call(context, "g"), "p"), "b");
-        if (!Integer.valueOf(2).equals(QqMusicBridge.call(contact, "d"))) return null;
-        String group = String.valueOf(QqMusicBridge.call(contact, "g"));
+        Object contact = call(call(call(context, "g"), "p"), "b");
+        if (!Integer.valueOf(2).equals(call(contact, "d"))) return null;
+        String group = String.valueOf(call(contact, "g"));
         return group.matches("[1-9][0-9]+") ? group : null;
+    }
+    private static Object call(Object target, String method) throws Exception {
+        return target.getClass().getMethod(method).invoke(target);
     }
     private static Activity activity(Context c) {
         for (int i = 0; i < 16 && c != null; i++) {
