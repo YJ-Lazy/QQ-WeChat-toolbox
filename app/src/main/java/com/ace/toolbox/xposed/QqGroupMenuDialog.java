@@ -65,9 +65,10 @@ final class QqGroupMenuDialog {
     private static void deliveryDialog(Activity a,String group) {
         try {
             QqMusicFeature feature=QqMusicFeature.INSTANCE; String account=feature.connect(a);
-            String[] items={"音乐卡片", "语音 · 本地转换 SILK"};
+            String[] items={"音乐卡片 · OIAPI（实验）", "语音 · 本地转换 SILK"};
             new AlertDialog.Builder(a, android.R.style.Theme_Material_Light_Dialog_Alert)
                 .setTitle("音乐发送方式")
+                .setMessage("OIAPI模式会将歌曲信息、封面和音频链接发给第三方生成卡片。接收端显示仍需实测。")
                 .setSingleChoiceItems(items,feature.delivery(account,group),(d,i)->{
                     try {feature.delivery(account,group,i);d.dismiss();
                         Toast.makeText(a,"已设为："+items[i],Toast.LENGTH_SHORT).show();

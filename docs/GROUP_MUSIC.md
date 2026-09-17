@@ -14,3 +14,6 @@ QQ 9.3.50 (15730)：长按群聊右上角进入独立群聊菜单。QQ 设置入
 ## 验证
 
 Java 源码编译检查通过。通过用户提供的 QQ APK 检查了 SilkCodecWrapper 与 IMsgUtilApi 接口。尚未实机验证 native 编码、音源可用性、卡片播放和语音上传。需分别测试自己/所有人、切换账号或关闭开关、不可用歌曲、长歌曲和发送失败场景。
+
+## OIAPI 实验卡片
+音乐卡片模式先获取可用音源，再请求 https://oiapi.net/API/QQMusicJSONArk（format/url/song/singer/cover/jump），校验 code=1 及 message 中的 app/view/meta 后原样通过 QQNT ArkElement 发送。不传 QQ 账号、Cookie；跳转指向官方歌曲页面。缺少音源、接口失败或发送异常时附歌曲链接；回执超时也不会重发卡片。发送回执不证明接收端可展示，需跨设备验证。

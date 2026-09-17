@@ -177,13 +177,16 @@ final class QqMusicFeature {
                 } else {
                     if (current(source, group, own, rev)) {
                         try {
-                            source.sendOfficialCard(group, song.card(source.account));
-                            Log.i("ACE-Music", "native card accepted title=" + song.title);
-                        } catch (Throwable cardError) {
-                            // A QQ Music SDK token is server-issued and cannot be safely
-                            // fabricated. Keep the command observable and actionable.
-                            Log.e("ACE-Music", "native card failed; falling back to text", cardError);
-                            source.send(group, "分享卡片发送失败（QQ音乐 token 无效），歌曲："
+                            String audio = QqMusicAudio.playable(song);
+                            if (!current(source, group, own, rev)) return;
+                            String card = QqMusicCardApi.create(song, audio);
+                            if (!current(source, group, own, rev)) return;
+                            source.send(group, card, true);
+                            Log.i("ACE-Music", "OIAPI card send acknowledged");
+                        } catch (Exception cardError) {
+                            Log.w("ACE-Music", "OIAPI card failed: " + cardError.getClass().getSimpleName());
+                            if (!current(source, group, own, rev)) return;
+                            source.send(group, "卡片生成或发送未确认，歌曲："
                                     + song.title + " — " + song.singer + "\n" + song.link(), false);
                             notice("卡片不可用，已发送歌曲链接；可在菜单切换为 SILK 语音");
                         }
